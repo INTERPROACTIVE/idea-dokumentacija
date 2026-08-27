@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slanje cenovnika preko konzole (Azure CLI)</title>
+<style>
+  :root { color-scheme: light; }
+  body { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px;
+         font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         font-size: 16px; line-height: 1.65; color: #1f2328; background: #fff; }
+  h1 { font-size: 30px; margin: 0 0 24px; padding-bottom: 12px; border-bottom: 2px solid #d0d7de; }
+  h2 { font-size: 21px; margin: 40px 0 12px; }
+  h3 { font-size: 17px; margin: 28px 0 8px; }
+  p { margin: 0 0 16px; }
+  ul { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  a { color: #0969da; }
+  hr { border: none; border-top: 1px solid #e4e8ed; margin: 36px 0; }
+  code { background: #f2f4f6; padding: 2px 6px; border-radius: 4px;
+         font-family: ui-monospace, Consolas, "Courier New", monospace; font-size: 90%; }
+  pre { background: #f6f8fa; padding: 14px 16px; border-radius: 8px; overflow-x: auto;
+        border: 1px solid #e4e8ed; margin: 0 0 16px; }
+  pre code { background: none; padding: 0; font-size: 13px; }
+  img { max-width: 100%; height: auto; display: block; margin: 20px 0;
+        border: 1px solid #d0d7de; border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; margin: 0 0 16px; font-size: 15px; }
+  th, td { border: 1px solid #d0d7de; padding: 8px 12px; text-align: left; }
+  th { background: #f6f8fa; }
+  @media print { body { max-width: none; padding: 0; } img { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<h1>Slanje cenovnika preko konzole (Azure CLI)</h1>
+<p>Ovo uputstvo pokazuje kako poslati CSV cenovnike na Azure Blob Storage pomoću Azure CLI-ja, iz konzole. Pogodno je kada šaljete više fajlova odjednom ili želite prenos da automatizujete.</p>
+<p>Instalacija se razlikuje po operativnom sistemu; sve ostalo je isto na Windowsu, macOS-u i Linuxu.</p>
+<hr>
+<h2>Pre početka</h2>
+<p>Potrebno je:</p>
+<p>1. <strong>Azure nalog</strong> sa pristupom storage nalogu. 2. <strong>CSV fajlovi</strong> u jednom folderu na računaru.</p>
+<p>Podaci za ovaj projekat:</p>
+<ul><li><strong>Storage Account:</strong> <code>ideacenovnici</code></li><li><strong>Blob Container:</strong> <code>cenovnici</code></li></ul>
+<p>Storage Account i Blob Container nisu ista stvar. Storage Account je Azure resurs koji sadrži kontejnere. U <code>--account-name</code> ide naziv <strong>storage naloga</strong>, a u <code>--destination</code> naziv <strong>kontejnera</strong>.</p>
+<hr>
+<h2>Korak 1 — Instalacija Azure CLI-ja</h2>
+<h3>Windows</h3>
+<p>Preuzmite instaler sa <a href="https://learn.microsoft.com/cli/azure/install-azure-cli-windows">https://learn.microsoft.com/cli/azure/install-azure-cli-windows</a>.</p>
+<p>Nakon instalacije zatvorite i ponovo otvorite PowerShell.</p>
+<h3>macOS</h3>
+<p>Sa Homebrewom:</p>
+<pre><code>brew update
+brew install azure-cli</code></pre>
+<p>Ako nemate Homebrew, instalirajte ga sa <a href="https://brew.sh/">https://brew.sh/</a> pa ponovite komandu.</p>
+<h3>Linux (Ubuntu / Debian)</h3>
+<pre><code>curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash</code></pre>
+<p>Ako <code>curl</code> nije instaliran:</p>
+<pre><code>sudo apt update
+sudo apt install curl -y</code></pre>
+<h3>Provera instalacije</h3>
+<p>Na svim sistemima:</p>
+<pre><code>az --version</code></pre>
+<p>Ako dobijete verziju, instalacija je uspela.</p>
+<hr>
+<h2>Korak 2 — Prijava</h2>
+<pre><code>az login</code></pre>
+<p>Otvara se browser. Prijavite se svojim Azure/Microsoft nalogom.</p>
+<hr>
+<h2>Korak 3 — Provera pretplate</h2>
+<pre><code>az account list --output table</code></pre>
+<p>Ako je potrebno izabrati određenu pretplatu:</p>
+<pre><code>az account set --subscription "&lt;NAZIV_ILI_ID_PRETPLATE&gt;"</code></pre>
+<hr>
+<h2>Korak 4 — Slanje CSV fajlova</h2>
+<p>Komanda šalje sve <code>.csv</code> fajlove iz jednog foldera.</p>
+<h3>Windows (PowerShell)</h3>
+<p>Za fajlove u <code>C:\Users\&lt;KORISNIK&gt;\csv</code>:</p>
+<pre><code>az storage blob upload-batch `
+  --account-name ideacenovnici `
+  --destination cenovnici `
+  --source "C:\Users\&lt;KORISNIK&gt;\csv" `
+  --pattern "*.csv" `
+  --auth-mode login</code></pre>
+<p>Isto, u jednom redu:</p>
+<pre><code>az storage blob upload-batch --account-name ideacenovnici --destination cenovnici --source "C:\Users\&lt;KORISNIK&gt;\csv" --pattern "*.csv" --auth-mode login</code></pre>
+<h3>macOS i Linux</h3>
+<p>Za fajlove u <code>~/csv</code>:</p>
+<pre><code>az storage blob upload-batch \
+  --account-name ideacenovnici \
+  --destination cenovnici \
+  --source ~/csv \
+  --pattern "*.csv" \
+  --auth-mode login</code></pre>
+<hr>
+<h2>Korak 5 — Provera</h2>
+<p>Na svim sistemima:</p>
+<pre><code>az storage blob list \
+  --account-name ideacenovnici \
+  --container-name cenovnici \
+  --auth-mode login \
+  --output table</code></pre>
+<p>Rezultat izgleda ovako:</p>
+<pre><code>Name                       Blob Type    Blob Tier    Length    Content Type    Last Modified
+-------------------------  -----------  -----------  --------  --------------  -------------------------
+cenovnik-2026-07-29.csv    BlockBlob    Hot          255       text/csv        2026-08-07T10:45:06+00:00
+cenovnik-2026-07-30.csv    BlockBlob    Hot          255       text/csv        2026-08-07T10:45:18+00:00
+cenovnik-2026-08-03.csv    BlockBlob    Hot          255       text/csv        2026-08-07T10:43:25+00:00</code></pre>
+<hr>
+<h2>Pregled parametara</h2>
+<table><thead><tr><th>Parametar</th><th>Šta se upisuje</th></tr></thead><tbody><tr><td><code>--account-name</code></td><td>naziv storage naloga — <code>ideacenovnici</code></td></tr><tr><td><code>--destination</code></td><td>naziv blob kontejnera — <code>cenovnici</code></td></tr><tr><td><code>--source</code></td><td>folder na računaru u kojem su CSV fajlovi</td></tr><tr><td><code>--pattern "*.csv"</code></td><td>šalje samo CSV fajlove</td></tr><tr><td><code>--auth-mode login</code></td><td>koristi nalog prijavljen preko <code>az login</code></td></tr></tbody></table>
+<hr>
+<h2>Ako nešto ne radi</h2>
+<p><strong><code>az</code> nije prepoznata komanda</strong> Zatvorite i ponovo otvorite konzolu. Ako i dalje ne radi, instalacija nije završena ili <code>az</code> nije u PATH-u.</p>
+<p><strong>Prijava ne uspeva</strong> Proverite da se prijavljujete nalogom koji smo vam otvorili, a ne privatnim.</p>
+<p><strong>Greška o dozvolama pri slanju</strong> Uz <code>--auth-mode login</code> potrebna je rola <em>Storage Blob Data Contributor</em> na kontejneru. Javite se administratoru za dodelu prava.</p>
+<p><strong>Nijedan fajl nije poslat</strong> Proverite da putanja u <code>--source</code> postoji i da u njoj zaista ima <code>.csv</code> fajlova.</p>
+<p>Ako zapnete, pošaljite nam tekst greške iz konzole.</p>
+</body>
+</html>
