@@ -19,8 +19,9 @@
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
        color: #8c959f; font-weight: 600; margin: 32px 0 12px; }
   h2:first-of-type { margin-top: 0; }
-  a.card code { font-family: ui-monospace, Consolas, monospace; font-size: 13px;
-                background: #eff2f5; border-radius: 4px; padding: 1px 4px; }
+  h2 code, a.card code { font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+                background: #eff2f5; border-radius: 4px; padding: 1px 4px;
+                text-transform: none; letter-spacing: 0; }
   footer { margin-top: 48px; font-size: 13px; color: #8c959f; }
 </style>
 </head>
@@ -45,11 +46,16 @@
     <span>Slanje iz konzole, više fajlova odjednom. Windows, macOS, Linux.</span>
   </a>
 
-  <h2>Državni cenovnik</h2>
+  <h2>Državni cenovnik — folder <code>drzavni</code></h2>
 
   <a class="card" href="azure-drzavni-upute/">
-    <strong>Objavljivanje državnog cenovnika na stalnu adresu</strong>
-    <span>Jedan fajl u folderu <code>drzavni</code>, uvek istog naziva, na adresi koja se ne menja. Portal ili konzola.</span>
+    <strong>Slanje državnog cenovnika — Azure Portal</strong>
+    <span>Ručno slanje kroz browser, uvek pod istim nazivom. Bez instalacije.</span>
+  </a>
+
+  <a class="card" href="azure-drzavni-cli-upute/">
+    <strong>Slanje državnog cenovnika — Azure CLI</strong>
+    <span>Jedna komanda iz konzole. Windows, macOS, Linux.</span>
   </a>
 
   <footer>INTERPROACTIVE</footer>

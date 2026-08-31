@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slanje državnog cenovnika preko konzole (Azure CLI)</title>
+<style>
+  :root { color-scheme: light; }
+  body { max-width: 820px; margin: 0 auto; padding: 40px 24px 80px;
+         font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+         font-size: 16px; line-height: 1.65; color: #1f2328; background: #fff; }
+  a.back { display: inline-block; margin-bottom: 20px; font-size: 14px;
+           color: #0969da; text-decoration: none; }
+  a.back:hover { text-decoration: underline; }
+  .back-footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e4e8ed; }
+  @media print { a.back, .back-footer { display: none; } }
+  h1 { font-size: 30px; margin: 0 0 24px; padding-bottom: 12px; border-bottom: 2px solid #d0d7de; }
+  h2 { font-size: 21px; margin: 40px 0 12px; }
+  h3 { font-size: 17px; margin: 28px 0 8px; }
+  p { margin: 0 0 16px; }
+  ul { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  a { color: #0969da; }
+  hr { border: none; border-top: 1px solid #e4e8ed; margin: 36px 0; }
+  code { background: #f2f4f6; padding: 2px 6px; border-radius: 4px;
+         font-family: ui-monospace, Consolas, "Courier New", monospace; font-size: 90%; }
+  pre { background: #f6f8fa; padding: 14px 16px; border-radius: 8px; overflow-x: auto;
+        border: 1px solid #e4e8ed; margin: 0 0 16px; }
+  pre code { background: none; padding: 0; font-size: 13px; }
+  img { max-width: 100%; height: auto; display: block; margin: 20px 0;
+        border: 1px solid #d0d7de; border-radius: 6px; }
+  table { border-collapse: collapse; width: 100%; margin: 0 0 16px; font-size: 15px; }
+  th, td { border: 1px solid #d0d7de; padding: 8px 12px; text-align: left; }
+  th { background: #f6f8fa; }
+  @media print { body { max-width: none; padding: 0; } img { page-break-inside: avoid; } }
+</style>
+</head>
+<body>
+<a class="back" href="https://interproactive.github.io/idea-dokumentacija/">&larr; Sva uputstva</a>
+<h1>Slanje državnog cenovnika preko konzole (Azure CLI)</h1>
+<p>Državni cenovnik se šalje u folder <code>drzavni</code> unutar kontejnera <code>cenovnici</code>, <strong>uvek pod istim nazivom</strong>: <code>cene_proizvoda_ideamarketi.csv</code>. Svako novo slanje prepisuje prethodni fajl, pa adresa ostaje ista.</p>
+<p>Za slanje kroz browser vidite <em>Slanje državnog cenovnika preko Azure Portala</em> (<code>DRZAVNI-UPUTSTVO-SR.md</code>).</p>
+<hr>
+<h2>Adresa na kojoj je cenovnik dostupan</h2>
+<pre><code>https://ideacenovnici.blob.core.windows.net/cenovnici/drzavni/cene_proizvoda_ideamarketi.csv</code></pre>
+<hr>
+<h2>Pre početka</h2>
+<p>Instalacija Azure CLI-ja, prijava (<code>az login</code>) i izbor pretplate identični su kao kod običnog slanja cenovnika. Ako to još niste uradili, uradite <strong>korake 1, 2 i 3</strong> iz uputstva <em>Slanje cenovnika preko konzole (Azure CLI)</em> (<code>CLI-UPUTSTVO-SR.md</code>), pa se vratite ovde.</p>
+<p>Podaci za ovaj projekat:</p>
+<ul><li><strong>Storage Account:</strong> <code>ideacenovnici</code></li><li><strong>Blob Container:</strong> <code>cenovnici</code></li><li><strong>Putanja:</strong> <code>drzavni/cene_proizvoda_ideamarketi.csv</code></li></ul>
+<hr>
+<h2>Slanje</h2>
+<h3>Windows (PowerShell)</h3>
+<pre><code>az storage blob upload `
+  --account-name ideacenovnici `
+  --container-name cenovnici `
+  --name "drzavni/cene_proizvoda_ideamarketi.csv" `
+  --file "C:\putanja\do\cenovnik.csv" `
+  --overwrite `
+  --content-type "text/csv" `
+  --content-cache-control "no-cache, max-age=0" `
+  --auth-mode login</code></pre>
+<h3>macOS i Linux</h3>
+<pre><code>az storage blob upload \
+  --account-name ideacenovnici \
+  --container-name cenovnici \
+  --name "drzavni/cene_proizvoda_ideamarketi.csv" \
+  --file ~/cenovnik.csv \
+  --overwrite \
+  --content-type "text/csv" \
+  --content-cache-control "no-cache, max-age=0" \
+  --auth-mode login</code></pre>
+<p>Komanda je jedna i radi sve odjednom: šalje fajl, prepisuje postojeći i postavlja zaglavlja. Kroz Portal se zaglavlje <code>Cache-Control</code> postavlja odvojeno i gubi se pri svakom novom slanju — ovde ne.</p>
+<hr>
+<h2>Razlike u odnosu na obično slanje cenovnika</h2>
+<table><thead><tr><th></th><th>Obično slanje</th><th>Državni cenovnik</th></tr></thead><tbody><tr><td>Komanda</td><td><code>az storage blob upload-batch</code></td><td><code>az storage blob upload</code></td></tr><tr><td>Kontejner</td><td><code>--destination</code></td><td><code>--container-name</code></td></tr><tr><td>Broj fajlova</td><td>više odjednom</td><td>tačno jedan</td></tr><tr><td>Naziv na Azure-u</td><td>isti kao na računaru</td><td>uvek <code>drzavni/cene_proizvoda_ideamarketi.csv</code></td></tr><tr><td>Prepisivanje</td><td>ne</td><td><code>--overwrite</code>, svaki put</td></tr></tbody></table>
+<p>Dve najčešće greške: zaboravljen <code>--overwrite</code> i korišćenje <code>--destination</code> umesto <code>--container-name</code>.</p>
+<p>Naziv fajla na vašem računaru nije bitan — <code>--name</code> određuje kako će se fajl zvati na Azure-u.</p>
+<hr>
+<h2>Provera</h2>
+<pre><code>az storage blob list \
+  --account-name ideacenovnici \
+  --container-name cenovnici \
+  --prefix "drzavni/" \
+  --auth-mode login \
+  --output table</code></pre>
+<p>Provera same adrese, bez preuzimanja fajla:</p>
+<pre><code>curl -I https://ideacenovnici.blob.core.windows.net/cenovnici/drzavni/cene_proizvoda_ideamarketi.csv</code></pre>
+<p>Očekuje se <code>HTTP/1.1 200 OK</code> i svež <code>Last-Modified</code>. Koristite <code>-I</code> (veliko i), ne <code>-i</code> — inače se preuzima ceo fajl.</p>
+<hr>
+<h2>Ako nešto ne radi</h2>
+<p><strong><code>BlobAlreadyExists</code> ili slanje ne uspeva</strong> Nedostaje <code>--overwrite</code>.</p>
+<p><strong>Greška o dozvolama</strong> Uz <code>--auth-mode login</code> potrebna je rola <em>Storage Blob Data Contributor</em>. Javite se administratoru.</p>
+<p><strong><code>az</code> nije prepoznata komanda</strong> Zatvorite i ponovo otvorite konzolu. Ako i dalje ne radi, Azure CLI nije instaliran — vidite korak 1 u uputstvu <em>Slanje cenovnika preko konzole (Azure CLI)</em>.</p>
+<p><strong>Adresa vraća <code>BlobNotFound</code></strong> Proverite <code>--name</code> — mora biti <code>drzavni/cene_proizvoda_ideamarketi.csv</code>, malim slovima.</p>
+<p>Ako zapnete, pošaljite nam tekst greške iz konzole.</p>
+<div class="back-footer"><a class="back" href="https://interproactive.github.io/idea-dokumentacija/">&larr; Sva uputstva</a></div>
+</body>
+</html>
