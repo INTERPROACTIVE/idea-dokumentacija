@@ -16,12 +16,19 @@
   a.card:hover { border-color: #0969da; background: #f6f8fa; }
   a.card strong { display: block; color: #0969da; font-size: 17px; margin-bottom: 4px; }
   a.card span { color: #59636e; font-size: 14px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+       color: #8c959f; font-weight: 600; margin: 32px 0 12px; }
+  h2:first-of-type { margin-top: 0; }
+  a.card code { font-family: ui-monospace, Consolas, monospace; font-size: 13px;
+                background: #eff2f5; border-radius: 4px; padding: 1px 4px; }
   footer { margin-top: 48px; font-size: 13px; color: #8c959f; }
 </style>
 </head>
 <body>
   <h1>IDEA — dokumentacija</h1>
   <p class="lead">Uputstva za partnere i saradnike.</p>
+
+  <h2>Slanje cenovnika — izaberite jedan način</h2>
 
   <a class="card" href="azure-storage-upute/">
     <strong>Slanje cenovnika — Azure Storage Explorer</strong>
@@ -36,6 +43,13 @@
   <a class="card" href="azure-cli-upute/">
     <strong>Slanje cenovnika — Azure CLI</strong>
     <span>Slanje iz konzole, više fajlova odjednom. Windows, macOS, Linux.</span>
+  </a>
+
+  <h2>Državni cenovnik</h2>
+
+  <a class="card" href="azure-drzavni-upute/">
+    <strong>Objavljivanje državnog cenovnika na stalnu adresu</strong>
+    <span>Jedan fajl u folderu <code>drzavni</code>, uvek istog naziva, na adresi koja se ne menja. Portal ili konzola.</span>
   </a>
 
   <footer>INTERPROACTIVE</footer>
