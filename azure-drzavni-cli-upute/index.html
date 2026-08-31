@@ -46,6 +46,7 @@
 <hr>
 <h2>Pre početka</h2>
 <p>Instalacija Azure CLI-ja, prijava (<code>az login</code>) i izbor pretplate identični su kao kod običnog slanja cenovnika. Ako to još niste uradili, uradite <strong>korake 1, 2 i 3</strong> iz uputstva <em>Slanje cenovnika preko konzole (Azure CLI)</em> (<code>CLI-UPUTSTVO-SR.md</code>), pa se vratite ovde.</p>
+<p>Ako umesto Azure naloga koristite <strong>SAS link</strong>, uradite samo <strong>korak 1</strong> (instalaciju CLI-ja) — koraci 2 i 3 tada ne važe. Zatim koristite komande iz poglavlja <em>Slanje bez Azure naloga (SAS link)</em> niže.</p>
 <p>Podaci za ovaj projekat:</p>
 <ul><li><strong>Storage Account:</strong> <code>ideacenovnici</code></li><li><strong>Blob Container:</strong> <code>cenovnici</code></li><li><strong>Putanja:</strong> <code>drzavni/cene_proizvoda_ideamarketi.csv</code></li></ul>
 <hr>
@@ -72,6 +73,33 @@
   --auth-mode login</code></pre>
 <p>Komanda je jedna i radi sve odjednom: šalje fajl, prepisuje postojeći i postavlja zaglavlja. Kroz Portal se zaglavlje <code>Cache-Control</code> postavlja odvojeno i gubi se pri svakom novom slanju — ovde ne.</p>
 <hr>
+<h2>Slanje bez Azure naloga (SAS link)</h2>
+<p>Ako nemate Azure nalog ili ne želite da se prijavljujete u dva koraka, tražite od nas <strong>SAS link</strong>. To je duga adresa koja sa sobom nosi sopstveno pravo upisa u kontejner i u potpunosti zamenjuje prijavu.</p>
+<p>Deo iza znaka <code>?</code> je SAS token — on ide u komandu. Držite ga pod navodnicima jer sadrži znak <code>&amp;</code>, koji bi konzola inače shvatila kao razdvajanje komandi. Link ima ugrađen datum isteka i prema njemu se ponašajte kao prema lozinki.</p>
+<h3>Windows (PowerShell)</h3>
+<pre><code>az storage blob upload `
+  --account-name ideacenovnici `
+  --container-name cenovnici `
+  --name "drzavni/cene_proizvoda_ideamarketi.csv" `
+  --file "C:\putanja\do\cenovnik.csv" `
+  --overwrite `
+  --content-type "text/csv" `
+  --content-cache-control "no-cache, max-age=0" `
+  --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
+<h3>macOS i Linux</h3>
+<pre><code>az storage blob upload \
+  --account-name ideacenovnici \
+  --container-name cenovnici \
+  --name "drzavni/cene_proizvoda_ideamarketi.csv" \
+  --file ~/cenovnik.csv \
+  --overwrite \
+  --content-type "text/csv" \
+  --content-cache-control "no-cache, max-age=0" \
+  --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
+<p><code>--sas-token</code> zamenjuje <code>--auth-mode login</code>. Nemojte koristiti oba u istoj komandi.</p>
+<p>Pošto se ovaj fajl svaki put prepisuje, SAS link mora imati pravo upisa preko postojećeg fajla. Ako spisak radi, a slanje je odbijeno, link je izdat bez tog prava — javite nam i izdaćemo novi.</p>
+<p>Ako cenovnik šaljete često, postavite token jednom umesto da ga lepite u svaku komandu — vidite <em>Ako ovo radite redovno</em> u <code>CLI-UPUTSTVO-SR.md</code>.</p>
+<hr>
 <h2>Razlike u odnosu na obično slanje cenovnika</h2>
 <table><thead><tr><th></th><th>Obično slanje</th><th>Državni cenovnik</th></tr></thead><tbody><tr><td>Komanda</td><td><code>az storage blob upload-batch</code></td><td><code>az storage blob upload</code></td></tr><tr><td>Kontejner</td><td><code>--destination</code></td><td><code>--container-name</code></td></tr><tr><td>Broj fajlova</td><td>više odjednom</td><td>tačno jedan</td></tr><tr><td>Naziv na Azure-u</td><td>isti kao na računaru</td><td>uvek <code>drzavni/cene_proizvoda_ideamarketi.csv</code></td></tr><tr><td>Prepisivanje</td><td>ne</td><td><code>--overwrite</code>, svaki put</td></tr></tbody></table>
 <p>Dve najčešće greške: zaboravljen <code>--overwrite</code> i korišćenje <code>--destination</code> umesto <code>--container-name</code>.</p>
@@ -84,13 +112,25 @@
   --prefix "drzavni/" \
   --auth-mode login \
   --output table</code></pre>
-<p>Provera same adrese, bez preuzimanja fajla:</p>
+<p>Uz SAS link zamenite poslednji parametar:</p>
+<pre><code>az storage blob list \
+  --account-name ideacenovnici \
+  --container-name cenovnici \
+  --prefix "drzavni/" \
+  --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..." \
+  --output table</code></pre>
+<p>Provera same adrese, bez preuzimanja fajla.</p>
+<p><strong>macOS i Linux:</strong></p>
 <pre><code>curl -I https://ideacenovnici.blob.core.windows.net/cenovnici/drzavni/cene_proizvoda_ideamarketi.csv</code></pre>
-<p>Očekuje se <code>HTTP/1.1 200 OK</code> i svež <code>Last-Modified</code>. Koristite <code>-I</code> (veliko i), ne <code>-i</code> — inače se preuzima ceo fajl.</p>
+<p><strong>Windows (PowerShell):</strong></p>
+<pre><code>curl.exe -I https://ideacenovnici.blob.core.windows.net/cenovnici/drzavni/cene_proizvoda_ideamarketi.csv</code></pre>
+<p>U PowerShellu je <code>curl</code> druga komanda, pa pišite <code>curl.exe</code> u punom obliku — inače dobijete grešku oko <code>-I</code>.</p>
+<p>Očekuje se <code>HTTP/1.1 200 OK</code> i svež <code>Last-Modified</code>. Koristite <code>-I</code> (veliko i), ne <code>-i</code> — inače se preuzima ceo fajl. Za ovu proveru ne treba ni prijava ni SAS link.</p>
 <hr>
 <h2>Ako nešto ne radi</h2>
 <p><strong><code>BlobAlreadyExists</code> ili slanje ne uspeva</strong> Nedostaje <code>--overwrite</code>.</p>
 <p><strong>Greška o dozvolama</strong> Uz <code>--auth-mode login</code> potrebna je rola <em>Storage Blob Data Contributor</em>. Javite se administratoru.</p>
+<p><strong><code>AuthenticationFailed</code> ili 403 uz SAS link</strong> Link je istekao ili je kopiran samo delimično. Ponovo kopirajte sve iza znaka <code>?</code> ili tražite novi link.</p>
 <p><strong><code>az</code> nije prepoznata komanda</strong> Zatvorite i ponovo otvorite konzolu. Ako i dalje ne radi, Azure CLI nije instaliran — vidite korak 1 u uputstvu <em>Slanje cenovnika preko konzole (Azure CLI)</em>.</p>
 <p><strong>Adresa vraća <code>BlobNotFound</code></strong> Proverite <code>--name</code> — mora biti <code>drzavni/cene_proizvoda_ideamarketi.csv</code>, malim slovima.</p>
 <p>Ako zapnete, pošaljite nam tekst greške iz konzole.</p>

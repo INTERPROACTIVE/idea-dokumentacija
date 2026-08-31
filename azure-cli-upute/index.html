@@ -47,6 +47,7 @@
 <p>Podaci za ovaj projekat:</p>
 <ul><li><strong>Storage Account:</strong> <code>ideacenovnici</code></li><li><strong>Blob Container:</strong> <code>cenovnici</code></li></ul>
 <p>Storage Account i Blob Container nisu ista stvar. Storage Account je Azure resurs koji sadrži kontejnere. U <code>--account-name</code> ide naziv <strong>storage naloga</strong>, a u <code>--destination</code> naziv <strong>kontejnera</strong>.</p>
+<p><strong>Nemate Azure nalog ili ne želite prijavu u dva koraka?</strong> Tražite od nas SAS link i pratite poglavlje <em>Slanje bez Azure naloga (SAS link)</em> niže u ovom uputstvu — tada preskačete korake 2 i 3 u potpunosti.</p>
 <hr>
 <h2>Korak 1 — Instalacija Azure CLI-ja</h2>
 <h3>Windows</h3>
@@ -70,11 +71,13 @@ sudo apt install curl -y</code></pre>
 <h2>Korak 2 — Prijava</h2>
 <pre><code>az login</code></pre>
 <p>Otvara se browser. Prijavite se svojim Azure/Microsoft nalogom.</p>
+<p>Ako koristite SAS link, preskočite ovaj korak.</p>
 <hr>
 <h2>Korak 3 — Provera pretplate</h2>
 <pre><code>az account list --output table</code></pre>
 <p>Ako je potrebno izabrati određenu pretplatu:</p>
 <pre><code>az account set --subscription "&lt;NAZIV_ILI_ID_PRETPLATE&gt;"</code></pre>
+<p>Ako koristite SAS link, preskočite ovaj korak.</p>
 <hr>
 <h2>Korak 4 — Slanje CSV fajlova</h2>
 <p>Komanda šalje sve <code>.csv</code> fajlove iz jednog foldera.</p>
@@ -111,14 +114,58 @@ cenovnik-2026-07-29.csv    BlockBlob    Hot          255       text/csv        2
 cenovnik-2026-07-30.csv    BlockBlob    Hot          255       text/csv        2026-08-07T10:45:18+00:00
 cenovnik-2026-08-03.csv    BlockBlob    Hot          255       text/csv        2026-08-07T10:43:25+00:00</code></pre>
 <hr>
+<h2>Slanje bez Azure naloga (SAS link)</h2>
+<p>Ako nemate Azure nalog ili ne želite da se prijavljujete u dva koraka, možemo vam izdati <strong>SAS link</strong>. To je duga adresa koja sa sobom nosi sopstveno pravo upisa u kontejner:</p>
+<pre><code>https://ideacenovnici.blob.core.windows.net/cenovnici?sp=racwl&amp;st=2026-09-01T00:00:00Z&amp;se=2026-12-31T23:59:00Z&amp;sig=...</code></pre>
+<p>Uz njega <strong>preskačete korake 2 i 3</strong> — nema <code>az login</code>, nema Microsoft naloga, nema koda u drugom koraku. Koraci 1, 4 i 5 ostaju isti; menja se samo poslednji parametar u komandi.</p>
+<p>Prema linku se ponašajte kao prema lozinki. Ko god ga ima, ima ista prava nad kontejnerom kao i vi, pa ga nemojte prosleđivati ni objavljivati. Ako mislite da je procureo, javite nam i izdaćemo novi, a stari ugasiti. Link ima i ugrađen datum isteka; kada prođe, komande prestaju da rade i treba vam novi link.</p>
+<h3>Šta se kopira iz linka</h3>
+<p>Deo <strong>iza znaka <code>?</code></strong> je SAS token. On ide u komande:</p>
+<pre><code>sp=racwl&amp;st=2026-09-01T00:00:00Z&amp;se=2026-12-31T23:59:00Z&amp;sig=...</code></pre>
+<p>Držite ga pod navodnicima. Sadrži znak <code>&amp;</code>, koji bi konzola inače shvatila kao razdvajanje komandi.</p>
+<h3>Slanje</h3>
+<h4>Windows (PowerShell)</h4>
+<pre><code>az storage blob upload-batch `
+  --account-name ideacenovnici `
+  --destination cenovnici `
+  --source "C:\Users\&lt;KORISNIK&gt;\csv" `
+  --pattern "*.csv" `
+  --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
+<h4>macOS i Linux</h4>
+<pre><code>az storage blob upload-batch \
+  --account-name ideacenovnici \
+  --destination cenovnici \
+  --source ~/csv \
+  --pattern "*.csv" \
+  --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
+<p><code>--sas-token</code> zamenjuje <code>--auth-mode login</code>. Nemojte koristiti oba u istoj komandi.</p>
+<h3>Provera</h3>
+<pre><code>az storage blob list \
+  --account-name ideacenovnici \
+  --container-name cenovnici \
+  --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..." \
+  --output table</code></pre>
+<h3>Ako ovo radite redovno <em>(nije obavezno)</em></h3>
+<p>Lepljenje tokena u svaku komandu je zamorno i ostaje zapisano u istoriji konzole. Azure CLI sam čita token iz promenljive okruženja <code>AZURE_STORAGE_SAS_TOKEN</code>, pa ga možete postaviti jednom i onda parametar <code>--sas-token</code> uopšte ne pisati.</p>
+<p><strong>Windows (PowerShell), za trenutni prozor:</strong></p>
+<pre><code>$env:AZURE_STORAGE_SAS_TOKEN = "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
+<p><strong>macOS i Linux, za trenutni terminal:</strong></p>
+<pre><code>export AZURE_STORAGE_SAS_TOKEN="sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
+<p>Posle toga je dovoljno:</p>
+<pre><code>az storage blob upload-batch --account-name ideacenovnici --destination cenovnici --source ~/csv --pattern "*.csv"</code></pre>
+<p>Podešavanje važi dok ne zatvorite prozor. Za trajno, upišite red u PowerShell profil ili u <code>~/.bashrc</code> — time token ujedno ostaje izvan istorije komandi.</p>
+<hr>
 <h2>Pregled parametara</h2>
-<table><thead><tr><th>Parametar</th><th>Šta se upisuje</th></tr></thead><tbody><tr><td><code>--account-name</code></td><td>naziv storage naloga — <code>ideacenovnici</code></td></tr><tr><td><code>--destination</code></td><td>naziv blob kontejnera — <code>cenovnici</code></td></tr><tr><td><code>--source</code></td><td>folder na računaru u kojem su CSV fajlovi</td></tr><tr><td><code>--pattern "*.csv"</code></td><td>šalje samo CSV fajlove</td></tr><tr><td><code>--auth-mode login</code></td><td>koristi nalog prijavljen preko <code>az login</code></td></tr></tbody></table>
+<table><thead><tr><th>Parametar</th><th>Šta se upisuje</th></tr></thead><tbody><tr><td><code>--account-name</code></td><td>naziv storage naloga — <code>ideacenovnici</code></td></tr><tr><td><code>--destination</code></td><td>naziv blob kontejnera — <code>cenovnici</code></td></tr><tr><td><code>--source</code></td><td>folder na računaru u kojem su CSV fajlovi</td></tr><tr><td><code>--pattern "*.csv"</code></td><td>šalje samo CSV fajlove</td></tr><tr><td><code>--auth-mode login</code></td><td>koristi nalog prijavljen preko <code>az login</code></td></tr><tr><td><code>--sas-token</code></td><td>koristi SAS link umesto prijave — zamenjuje <code>--auth-mode login</code></td></tr></tbody></table>
 <hr>
 <h2>Ako nešto ne radi</h2>
 <p><strong><code>az</code> nije prepoznata komanda</strong> Zatvorite i ponovo otvorite konzolu. Ako i dalje ne radi, instalacija nije završena ili <code>az</code> nije u PATH-u.</p>
 <p><strong>Prijava ne uspeva</strong> Proverite da se prijavljujete nalogom koji smo vam otvorili, a ne privatnim.</p>
 <p><strong>Greška o dozvolama pri slanju</strong> Uz <code>--auth-mode login</code> potrebna je rola <em>Storage Blob Data Contributor</em> na kontejneru. Javite se administratoru za dodelu prava.</p>
 <p><strong>Nijedan fajl nije poslat</strong> Proverite da putanja u <code>--source</code> postoji i da u njoj zaista ima <code>.csv</code> fajlova.</p>
+<p><strong><code>AuthenticationFailed</code> ili 403 uz SAS link</strong> Link je istekao ili je kopiran samo delimično. Ponovo kopirajte sve iza znaka <code>?</code>. Ako i dalje ne radi, tražite novi link.</p>
+<p><strong>Spisak fajlova radi, ali slanje je odbijeno</strong> Link je izdat bez prava upisa. Javite nam i izdaćemo novi.</p>
+<p><strong>Zajedno korišćeni <code>--auth-mode login</code> i <code>--sas-token</code></strong> Koristi se jedno ili drugo, nikada oboje u istoj komandi.</p>
 <p>Ako zapnete, pošaljite nam tekst greške iz konzole.</p>
 <div class="back-footer"><a class="back" href="https://interproactive.github.io/idea-dokumentacija/">&larr; Sva uputstva</a></div>
 </body>
