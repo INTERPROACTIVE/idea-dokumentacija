@@ -75,8 +75,10 @@
 <hr>
 <h2>Slanje bez Azure naloga (SAS link)</h2>
 <p>Ako nemate Azure nalog ili ne želite da se prijavljujete u dva koraka, tražite od nas <strong>SAS link</strong>. To je duga adresa koja sa sobom nosi sopstveno pravo upisa u kontejner i u potpunosti zamenjuje prijavu.</p>
-<p>Deo iza znaka <code>?</code> je SAS token — on ide u komandu. Držite ga pod navodnicima jer sadrži znak <code>&amp;</code>, koji bi konzola inače shvatila kao razdvajanje komandi. Link ima ugrađen datum isteka i prema njemu se ponašajte kao prema lozinki.</p>
+<p>Deo iza znaka <code>?</code> je SAS token — kopirajte ga u celosti, uključujući sve iza svakog znaka <code>&amp;</code>. Link ima ugrađen datum isteka i prema njemu se ponašajte kao prema lozinki.</p>
 <h3>Windows (PowerShell)</h3>
+<p>Token postavite jednom, pa fajl pošaljite bez dodatnog parametra:</p>
+<pre><code>$env:AZURE_STORAGE_SAS_TOKEN = "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
 <pre><code>az storage blob upload `
   --account-name ideacenovnici `
   --container-name cenovnici `
@@ -84,9 +86,11 @@
   --file "C:\putanja\do\cenovnik.csv" `
   --overwrite `
   --content-type "text/csv" `
-  --content-cache-control "no-cache, max-age=0" `
-  --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
+  --content-cache-control "no-cache, max-age=0"</code></pre>
+<p><strong>Na Windowsu token nemojte stavljati u <code>--sas-token</code>.</strong> Na Windowsu je <code>az</code> skripta, PowerShell uklanja navodnike oko vrednosti bez razmaka, pa se komanda prekida na svakom znaku <code>&amp;</code> — dobijete <code>NoAuthenticationInformation</code>, a zatim greške tipa <code>'sp' is not recognized as an internal or external command</code>. Promenljiva okruženja to zaobilazi jer token nikada nije deo komandne linije.</p>
+<p>Podešavanje važi dok ne zatvorite prozor. Za trajno, dodajte isti red u svoj PowerShell profil (<code>notepad $PROFILE</code>).</p>
 <h3>macOS i Linux</h3>
+<p>Ovde parametar radi normalno:</p>
 <pre><code>az storage blob upload \
   --account-name ideacenovnici \
   --container-name cenovnici \
@@ -96,10 +100,9 @@
   --content-type "text/csv" \
   --content-cache-control "no-cache, max-age=0" \
   --sas-token "sp=racwl&amp;st=...&amp;se=...&amp;sig=..."</code></pre>
-<p><code>--sas-token</code> zamenjuje <code>--auth-mode login</code>. Nemojte koristiti oba u istoj komandi.</p>
+<p>Zadržite navodnike, inače ljuska preseca token na prvom znaku <code>&amp;</code>. I ovde radi <code>export AZURE_STORAGE_SAS_TOKEN="..."</code> ako ga radije postavite jednom.</p>
+<p>SAS zamenjuje <code>--auth-mode login</code>; nikada ne koristite oboje u istoj komandi.</p>
 <p>Pošto se ovaj fajl svaki put prepisuje, SAS link mora imati pravo upisa preko postojećeg fajla. Ako spisak radi, a slanje je odbijeno, link je izdat bez tog prava — javite nam i izdaćemo novi.</p>
-<p>Ako cenovnik šaljete često, postavite token jednom umesto da ga lepite u svaku komandu — vidite <em>Ako ovo radite redovno</em> u <code>CLI-UPUTSTVO-SR.md</code>.</p>
-<hr>
 <h2>Razlike u odnosu na obično slanje cenovnika</h2>
 <table><thead><tr><th></th><th>Obično slanje</th><th>Državni cenovnik</th></tr></thead><tbody><tr><td>Komanda</td><td><code>az storage blob upload-batch</code></td><td><code>az storage blob upload</code></td></tr><tr><td>Kontejner</td><td><code>--destination</code></td><td><code>--container-name</code></td></tr><tr><td>Broj fajlova</td><td>više odjednom</td><td>tačno jedan</td></tr><tr><td>Naziv na Azure-u</td><td>isti kao na računaru</td><td>uvek <code>drzavni/cene_proizvoda_ideamarketi.csv</code></td></tr><tr><td>Prepisivanje</td><td>ne</td><td><code>--overwrite</code>, svaki put</td></tr></tbody></table>
 <p>Dve najčešće greške: zaboravljen <code>--overwrite</code> i korišćenje <code>--destination</code> umesto <code>--container-name</code>.</p>
@@ -112,7 +115,7 @@
   --prefix "drzavni/" \
   --auth-mode login \
   --output table</code></pre>
-<p>Uz SAS link zamenite poslednji parametar:</p>
+<p>Uz SAS link na macOS-u ili Linuxu zamenite poslednji parametar. Na Windowsu postavite <code>AZURE_STORAGE_SAS_TOKEN</code> kao gore i jednostavno izostavite <code>--auth-mode login</code>:</p>
 <pre><code>az storage blob list \
   --account-name ideacenovnici \
   --container-name cenovnici \
